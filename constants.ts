@@ -1,20 +1,20 @@
 import { Gig, User, ChatThread, WalletTransaction } from './types';
 
 export const MOCK_USERS: User[] = [
-  { id: 'u2', name: 'Sarah J.', role: 'client', avatar: 'https://picsum.photos/id/65/200/200', rating: 4.9, location: 'West End', isVerified: true },
-  { id: 'u3', name: 'Dr. Smith', role: 'client', avatar: 'https://picsum.photos/id/66/200/200', rating: 5.0, location: 'City Clinic', isVerified: true },
-  { id: 'u4', name: 'Mike T.', role: 'atumwa', avatar: 'https://picsum.photos/id/68/200/200', rating: 4.6, location: 'North Side', isVerified: true },
+  { id: 'u2', name: 'Sarah J.', role: 'client', avatar: 'https://picsum.photos/id/65/200/200', rating: 4.9, location: 'London, UK', isVerified: true }, // Diaspora Client
+  { id: 'u3', name: 'Dr. Moyo', role: 'client', avatar: 'https://picsum.photos/id/66/200/200', rating: 5.0, location: 'Avenues, Harare', isVerified: true }, // Local Client
+  { id: 'u4', name: 'Tinashe M.', role: 'atumwa', avatar: 'https://picsum.photos/id/68/200/200', rating: 4.6, location: 'Warren Park', isVerified: true },
 ];
 
 // Defined Roles for Login
 // MOCK_ATUMWA is unverified to demonstrate ID upload flow
 export const MOCK_ATUMWA: User = {
   id: 'u1',
-  name: 'Alex M.',
+  name: 'Blessing C.',
   role: 'atumwa',
   avatar: 'https://picsum.photos/id/64/200/200',
   rating: 4.8,
-  location: 'Downtown District',
+  location: 'Harare CBD',
   jobsCompleted: 142,
   isVerified: false 
 };
@@ -31,7 +31,7 @@ export const MOCK_ADMIN: User = {
   role: 'admin',
   avatar: 'https://ui-avatars.com/api/?name=Admin+User&background=0f172a&color=fff',
   rating: 5.0,
-  location: 'HQ',
+  location: 'Eastgate Centre',
   jobsCompleted: 0,
   isVerified: true
 };
@@ -40,81 +40,88 @@ export const MOCK_GIGS: Gig[] = [
   {
     id: 'g1',
     title: 'Urgent Prescription Pickup',
-    description: 'Need someone to pick up a prescription from CVS on Main St and deliver to my elderly mother.',
+    description: 'Need someone to pick up a prescription from Greenwood Pharmacy on Fife Ave and deliver to my mother in the Avenues.',
     type: 'prescription',
     price: 15.00,
+    paymentMethod: 'ecocash',
     status: 'open',
-    locationStart: 'CVS Pharmacy, Main St',
-    locationEnd: 'Oak Avenue Apartments',
-    postedBy: MOCK_USERS[1], // Dr. Smith
+    locationStart: 'Greenwood Pharmacy, Fife Ave',
+    locationEnd: 'Jacaranda Mews, Avenues',
+    postedBy: MOCK_USERS[1], // Dr. Moyo
     postedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
     distance: '2.5 km'
   },
   {
     id: 'g2',
     title: 'Legal Document Drop-off',
-    description: 'Deliver signed contracts to the City Court Clerk. Must be there before 4 PM.',
+    description: 'Deliver signed contracts to the High Court. Must be there before 4 PM.',
     type: 'paperwork',
     price: 25.00,
-    status: 'open',
-    locationStart: 'Law Offices, 5th Ave',
-    locationEnd: 'City Courthouse',
-    postedBy: MOCK_USERS[0], // Sarah (MOCK_CLIENT)
+    paymentMethod: 'cash_usd',
+    status: 'in-progress', // Changed to in-progress for demo
+    locationStart: 'Honey & Blanckenberg, 2nd St',
+    locationEnd: 'High Court, Samora Machel',
+    postedBy: MOCK_USERS[0], // Sarah (Diaspora)
     postedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString(), // 2 hours ago
-    distance: '1.2 km'
+    distance: '1.2 km',
+    assignedTo: 'u1' // Assigned to mock Atumwa
   },
   {
     id: 'g3',
-    title: 'Quick Grocery Run',
-    description: 'Milk, Eggs, Bread, and Coffee. I am stuck in a meeting.',
+    title: 'Grocery Run for Family',
+    description: 'Fresh veggies, Maize Meal, and Cooking Oil from Food Lovers. Delivery to Mt Pleasant.',
     type: 'shopping',
     price: 18.50,
+    paymentMethod: 'zig',
     status: 'open',
-    locationStart: 'Whole Foods',
-    locationEnd: 'Tech Park, Building B',
-    postedBy: MOCK_USERS[0], // Sarah (MOCK_CLIENT)
+    locationStart: 'Food Lovers Market, Avondale',
+    locationEnd: 'Office Park, Mt Pleasant',
+    postedBy: MOCK_USERS[0], // Sarah (Diaspora)
     postedAt: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-    distance: '0.8 km'
+    distance: '3.0 km'
   },
   {
     id: 'g4',
-    title: 'Parcel Collection from Post Office',
-    description: 'Large box waiting at the post office. Too heavy for me to carry.',
+    title: 'Bus Parcel Collection',
+    description: 'Collect a parcel sent from Bulawayo arriving at Roadport. It is a box of auto parts.',
     type: 'parcel',
     price: 20.00,
+    paymentMethod: 'ecocash',
     status: 'in-progress',
-    locationStart: 'Central Post Office',
-    locationEnd: 'Residential Area',
-    postedBy: MOCK_USERS[2], // Mike
+    locationStart: 'Roadport Bus Station',
+    locationEnd: 'Greendale',
+    postedBy: MOCK_USERS[2], // Tinashe
     postedAt: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
-    distance: '3.0 km',
+    distance: '8.0 km',
     assignedTo: 'u1' // Assigned to the mock Atumwa
   },
   {
     id: 'g5',
-    title: 'Old Request - Forgotten Items',
-    description: 'Left my gym bag at the studio. Need it brought to my office.',
+    title: 'Gym Bag Retrieval',
+    description: 'Left my gym bag at the studio in Sam Levy\'s. Need it brought to my office in town.',
     type: 'parcel',
     price: 12.00,
+    paymentMethod: 'cash_usd',
     status: 'open', // This should be marked expired by logic
-    locationStart: 'Yoga Studio, 2nd St',
-    locationEnd: 'Financial District',
+    locationStart: 'ProFitness, Borrowdale',
+    locationEnd: 'Eastgate Centre, CBD',
     postedBy: MOCK_USERS[0],
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 96).toISOString(), // 96 hours ago (4 days)
-    distance: '4.5 km'
+    distance: '11.5 km'
   },
   {
     id: 'g6',
-    title: 'Last Minute Delivery',
-    description: 'Need a package delivered to the airport before I fly out tomorrow.',
+    title: 'Last Minute Airport Delivery',
+    description: 'Need a package delivered to RGM Airport departures drop-off zone.',
     type: 'parcel',
     price: 45.00,
+    paymentMethod: 'cash_usd',
     status: 'open',
-    locationStart: 'Downtown Hotel',
-    locationEnd: 'Airport Terminal 1',
+    locationStart: 'Meikles Hotel',
+    locationEnd: 'RGM Int. Airport',
     postedBy: MOCK_USERS[0],
     postedAt: new Date(Date.now() - 1000 * 60 * 60 * 52).toISOString(), // 52 hours ago (within last 24h of 72h window)
-    distance: '12 km'
+    distance: '14 km'
   }
 ];
 
@@ -137,14 +144,14 @@ export const MOCK_CHATS: ChatThread[] = [
 
 export const WALLET_HISTORY: WalletTransaction[] = [
   { id: 't1', date: '2023-10-25', amount: 25.00, type: 'credit', description: 'Legal Doc Delivery' },
-  { id: 't2', date: '2023-10-24', amount: 15.00, type: 'credit', description: 'Coffee Run' },
+  { id: 't2', date: '2023-10-24', amount: 15.00, type: 'credit', description: 'Coffee Run - Avondale' },
   { id: 't3', date: '2023-10-22', amount: -5.00, type: 'debit', description: 'Platform Fee' },
-  { id: 't4', date: '2023-10-20', amount: 40.00, type: 'credit', description: 'Multiple Parcel Drop' },
-  { id: 't5', date: '2023-10-18', amount: 22.00, type: 'credit', description: 'Prescription Pickup' },
+  { id: 't4', date: '2023-10-20', amount: 40.00, type: 'credit', description: 'Roadport Parcel' },
+  { id: 't5', date: '2023-10-18', amount: 22.00, type: 'credit', description: 'Pharmacy Pickup' },
 ];
 
 export const FEED_UPDATES = [
-  { id: 1, user: MOCK_USERS[0], content: 'Just had a great experience with an Atumwa for my grocery run! 🛒 #lifesaver', time: '2h ago' },
-  { id: 2, user: MOCK_USERS[2], content: 'Looking for a reliable messenger for recurring document deliveries. PM me.', time: '4h ago' },
-  { id: 3, user: MOCK_ATUMWA, content: 'Completed 5 gigs today. The city is busy! 🏙️', time: '6h ago' },
+  { id: 1, user: MOCK_USERS[0], content: 'Just had a great experience with an Atumwa for my grocery run in Avondale! 🛒 #Harare #Convenience', time: '2h ago' },
+  { id: 2, user: MOCK_USERS[2], content: 'Looking for a reliable messenger for recurring document deliveries to Government Complex. PM me.', time: '4h ago' },
+  { id: 3, user: MOCK_ATUMWA, content: 'Completed 5 gigs today. CBD traffic is crazy but we move! 🏙️', time: '6h ago' },
 ];

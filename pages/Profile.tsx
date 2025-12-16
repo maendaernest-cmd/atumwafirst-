@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { WALLET_HISTORY } from '../constants';
 import { useAuth } from '../context/AuthContext';
-import { Star, MapPin, Award, ChevronRight, CreditCard, Settings, LogOut, ShieldCheck, Mail, Upload, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useToast } from '../context/ToastContext';
+import { Star, MapPin, Award, ChevronRight, CreditCard, Settings, LogOut, ShieldCheck, Mail, Upload, CheckCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Data for the chart
@@ -17,6 +18,7 @@ const data = [
 
 export const Profile: React.FC = () => {
   const { user, logout, verifyUser } = useAuth();
+  const { addToast } = useToast();
   const [verificationState, setVerificationState] = useState<'idle' | 'sending' | 'pending_code' | 'verifying' | 'uploading' | 'success'>('idle');
   const [emailCode, setEmailCode] = useState('');
 
@@ -25,16 +27,30 @@ export const Profile: React.FC = () => {
   // Verification Handlers
   const handleSendEmailCode = () => {
     setVerificationState('sending');
+    // Simulate API call
     setTimeout(() => {
         setVerificationState('pending_code');
+        addToast('Verification Code Sent', 'Please check your email inbox for the 4-digit code.', 'message');
     }, 1500);
+  };
+
+  const handleResendCode = () => {
+      // Simulate Resend
+      addToast('Code Resent', 'A new verification code has been sent to your email.', 'message');
   };
 
   const handleVerifyEmail = () => {
     if (emailCode.length < 4) return;
     setVerificationState('verifying');
+    
+    // Simulate Verification API
     setTimeout(() => {
         setVerificationState('success');
+        addToast(
+            'Verification Submitted', 
+            'Email verified successfully. Your profile is now unlocked.', 
+            'success'
+        );
         // Delay context update so user sees success message
         setTimeout(() => {
             verifyUser();
@@ -43,10 +59,24 @@ export const Profile: React.FC = () => {
   };
 
   const handleIdUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files?.[0];
+      if (file) {
+          // Validate file type
+          if (!file.type.startsWith('image/')) {
+              addToast('Invalid File Type', 'Please upload a valid image file (JPG, PNG).', 'alert');
+              return;
+          }
+
           setVerificationState('uploading');
+          // Simulate upload latency
           setTimeout(() => {
               setVerificationState('success');
+              addToast(
+                  'Documents Uploaded', 
+                  'Your ID has been securely transmitted. Admin alert triggered for review.', 
+                  'success'
+              );
+              // Verify user after success animation
               setTimeout(() => {
                   verifyUser();
               }, 2000);
@@ -55,7 +85,7 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20 md:pb-0">
+    <div className="max-w-4xl mx-auto space-y-6">
       
       {/* Profile Header Card */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden relative">
@@ -66,7 +96,7 @@ export const Profile: React.FC = () => {
                     <img src={user.avatar} alt="Profile" className="w-24 h-24 rounded-full border-4 border-white shadow-md bg-white object-cover" />
                     {user.isVerified && (
                         <div className="absolute bottom-1 right-1 bg-white rounded-full p-1 shadow-sm">
-                            <CheckCircle size={20} className="text-blue-500 fill-blue-50" />
+                            <CheckCircle size={20} className="text-brand-500 fill-brand-50" />
                         </div>
                     )}
                 </div>
@@ -78,7 +108,7 @@ export const Profile: React.FC = () => {
                 <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold text-slate-800">{user.name}</h1>
                     {user.isVerified && (
-                        <span className="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-blue-200">
+                        <span className="bg-brand-100 text-brand-700 text-xs px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border border-brand-200">
                              Verified
                         </span>
                     )}
@@ -90,7 +120,7 @@ export const Profile: React.FC = () => {
                     <span className="flex items-center gap-1 bg-amber-50 text-amber-700 px-2 py-1 rounded font-medium">
                         <Star size={14} className="fill-amber-500 text-amber-500" /> {user.rating} Rating
                     </span>
-                    <span className="flex items-center gap-1 bg-blue-50 text-blue-700 px-2 py-1 rounded font-medium">
+                    <span className="flex items-center gap-1 bg-brand-50 text-brand-700 px-2 py-1 rounded font-medium">
                         <Award size={14} /> {user.jobsCompleted} Gigs Completed
                     </span>
                 </div>
@@ -119,62 +149,77 @@ export const Profile: React.FC = () => {
                       <div className="p-6">
                           {user.role === 'client' ? (
                               // CLIENT VERIFICATION (Email)
-                              <div>
+                              <div className="max-w-md mx-auto">
                                   {verificationState === 'idle' && (
-                                      <div className="flex flex-col gap-4">
-                                          <p className="text-sm text-slate-600">We need to verify your email address before you can fully utilize the platform.</p>
+                                      <div className="flex flex-col gap-4 text-center">
+                                          <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-2">
+                                            <Mail size={32} />
+                                          </div>
+                                          <p className="text-sm text-slate-600">We will send a one-time verification code to your registered email address to verify your identity.</p>
                                           <button 
                                               onClick={handleSendEmailCode}
-                                              className="flex items-center justify-center gap-2 bg-slate-900 text-white py-2.5 rounded-lg hover:bg-slate-800 transition-colors font-medium w-full sm:w-auto px-6"
+                                              className="flex items-center justify-center gap-2 bg-slate-900 text-white py-3 rounded-lg hover:bg-slate-800 transition-colors font-bold shadow-lg shadow-slate-200"
                                           >
-                                              <Mail size={18} /> Send Verification Code
+                                              Send Verification Code
                                           </button>
                                       </div>
                                   )}
 
                                   {verificationState === 'sending' && (
-                                       <div className="flex flex-col items-center justify-center py-4">
-                                           <Loader2 className="animate-spin text-brand-600 mb-2" size={32} />
-                                           <p className="text-sm text-slate-500">Sending verification code...</p>
+                                       <div className="flex flex-col items-center justify-center py-8">
+                                           <Loader2 className="animate-spin text-brand-600 mb-4" size={40} />
+                                           <p className="text-sm font-medium text-slate-600">Sending verification code...</p>
                                        </div>
                                   )}
 
                                   {verificationState === 'pending_code' && (
-                                      <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                                          <div className="bg-blue-50 text-blue-800 text-sm p-3 rounded-lg border border-blue-100 flex items-start gap-2">
-                                              <Mail size={16} className="mt-0.5" />
-                                              <div>
-                                                  A code has been sent to your email. (Mock: Enter any 4 digits)
-                                              </div>
+                                      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                          <div className="text-center">
+                                              <h3 className="font-bold text-slate-800 mb-1">Enter Verification Code</h3>
+                                              <p className="text-sm text-slate-500">We sent a 4-digit code to your email.</p>
                                           </div>
+                                          
                                           <div>
-                                              <label className="block text-sm font-semibold text-slate-700 mb-1">Verification Code</label>
                                               <input 
                                                   type="text" 
-                                                  placeholder="e.g. 1234" 
-                                                  className="w-full border border-slate-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-brand-500 focus:outline-none tracking-widest font-mono text-center text-lg"
+                                                  inputMode="numeric"
+                                                  pattern="[0-9]*"
+                                                  placeholder="0000" 
+                                                  className="w-full border border-slate-300 rounded-xl px-4 py-4 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 focus:outline-none tracking-[1em] font-mono text-center text-2xl font-bold text-slate-800 placeholder-slate-200 transition-all"
                                                   value={emailCode}
-                                                  onChange={(e) => setEmailCode(e.target.value)}
+                                                  onChange={(e) => {
+                                                    // Only allow numbers and max 4 chars
+                                                    const val = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                                                    setEmailCode(val);
+                                                  }}
                                                   maxLength={4}
+                                                  autoFocus
                                               />
                                           </div>
+                                          
                                           <button 
                                               onClick={handleVerifyEmail}
                                               disabled={emailCode.length < 4}
-                                              className="w-full bg-brand-600 text-white py-2.5 rounded-lg hover:bg-brand-700 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-100"
+                                              className="w-full bg-brand-600 text-white py-3 rounded-lg hover:bg-brand-700 transition-colors font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-brand-100"
                                           >
                                               Verify Email
                                           </button>
-                                          <button onClick={() => setVerificationState('idle')} className="text-xs text-slate-500 hover:text-slate-800 underline w-full text-center">
-                                              Resend Code
-                                          </button>
+                                          
+                                          <div className="flex items-center justify-between text-xs pt-2">
+                                              <button onClick={() => setVerificationState('idle')} className="text-slate-500 hover:text-slate-800">
+                                                  Wrong email?
+                                              </button>
+                                              <button onClick={handleResendCode} className="text-brand-600 font-bold hover:underline flex items-center gap-1">
+                                                  <RefreshCw size={12} /> Resend Code
+                                              </button>
+                                          </div>
                                       </div>
                                   )}
 
                                   {verificationState === 'verifying' && (
-                                       <div className="flex flex-col items-center justify-center py-4">
-                                           <Loader2 className="animate-spin text-brand-600 mb-2" size={32} />
-                                           <p className="text-sm text-slate-500">Verifying code...</p>
+                                       <div className="flex flex-col items-center justify-center py-8">
+                                           <Loader2 className="animate-spin text-brand-600 mb-4" size={40} />
+                                           <p className="text-sm font-medium text-slate-600">Verifying code...</p>
                                        </div>
                                   )}
                               </div>
@@ -183,14 +228,14 @@ export const Profile: React.FC = () => {
                               <div>
                                   {verificationState === 'idle' && (
                                       <div className="space-y-4">
-                                          <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
+                                          <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors cursor-pointer relative group">
                                               <input 
                                                   type="file" 
-                                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                                   accept="image/*"
                                                   onChange={handleIdUpload}
                                               />
-                                              <div className="bg-brand-50 text-brand-600 p-4 rounded-full mb-3">
+                                              <div className="bg-brand-50 text-brand-600 p-4 rounded-full mb-3 group-hover:scale-110 transition-transform">
                                                   <Upload size={32} />
                                               </div>
                                               <h3 className="font-bold text-slate-800 mb-1">Upload Government ID</h3>
@@ -216,11 +261,11 @@ export const Profile: React.FC = () => {
                           {/* Common Success State for both roles */}
                           {verificationState === 'success' && (
                                 <div className="flex flex-col items-center justify-center py-6 text-green-600 animate-in zoom-in duration-300">
-                                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
-                                        <CheckCircle size={28} />
+                                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                                        <CheckCircle size={32} />
                                     </div>
-                                    <p className="font-bold text-lg">Verification Successful!</p>
-                                    <p className="text-sm text-slate-500">Updating profile...</p>
+                                    <p className="font-bold text-xl mb-1">Verification Successful!</p>
+                                    <p className="text-sm text-slate-500">Redirecting to your dashboard...</p>
                                 </div>
                           )}
                       </div>
@@ -241,8 +286,8 @@ export const Profile: React.FC = () => {
                             <AreaChart data={data}>
                                 <defs>
                                     <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.2}/>
-                                        <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#16a34a" stopOpacity={0.2}/>
+                                        <stop offset="95%" stopColor="#16a34a" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -252,7 +297,7 @@ export const Profile: React.FC = () => {
                                     contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}}
                                     cursor={{stroke: '#cbd5e1', strokeWidth: 1}}
                                 />
-                                <Area type="monotone" dataKey="amount" stroke="#0ea5e9" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
+                                <Area type="monotone" dataKey="amount" stroke="#16a34a" strokeWidth={3} fillOpacity={1} fill="url(#colorAmount)" />
                             </AreaChart>
                         </ResponsiveContainer>
                       </div>

@@ -7,7 +7,10 @@ import { MapPage } from './pages/MapPage';
 import { Messages } from './pages/Messages';
 import { Profile } from './pages/Profile';
 import { Landing } from './pages/Landing';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { GlobalSocketListener } from './components/GlobalSocketListener';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 
 const AuthenticatedApp = () => {
   const { user } = useAuth();
@@ -17,12 +20,21 @@ const AuthenticatedApp = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 flex-col md:flex-row">
+      {/* Global WebSocket Simulation for Chat and Admin Broadcasts */}
+      <GlobalSocketListener />
+      
       <Navigation />
       
-      <main className="flex-1 max-w-7xl mx-auto w-full md:px-8 py-6 px-4 mb-16 md:mb-0">
+      {/* 
+          Mobile: pt-20 (80px) to clear the fixed h-16 (64px) header + spacing. 
+          Desktop: pt-6, md:px-8.
+          Removed mb-16 (bottom nav margin).
+      */}
+      <main className="flex-1 max-w-7xl mx-auto w-full md:px-8 py-6 px-4 pt-20 md:pt-6">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/admin" element={user.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" />} />
           <Route path="/gigs" element={<Gigs />} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/messages" element={<Messages />} />
@@ -37,7 +49,9 @@ const AuthenticatedApp = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+      <ToastProvider>
+        <AuthenticatedApp />
+      </ToastProvider>
     </AuthProvider>
   );
 }

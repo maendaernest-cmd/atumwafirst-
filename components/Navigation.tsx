@@ -1,40 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Briefcase, Map, MessageSquare, User, LogOut, CheckCircle } from 'lucide-react';
+import { Home, Briefcase, Map, MessageSquare, User, LogOut, CheckCircle, Menu, X, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const NavItem = ({ to, icon: Icon, label }: { to: string; icon: any; label: string }) => (
   <NavLink
     to={to}
     className={({ isActive }) =>
-      `flex flex-col md:flex-row items-center justify-center md:justify-start md:px-6 md:py-3 py-2 px-1 rounded-lg transition-colors ${
+      `flex items-center px-4 py-3 mx-2 rounded-lg transition-colors font-medium ${
         isActive
-          ? 'text-brand-600 md:bg-brand-50'
+          ? 'text-brand-600 bg-brand-50'
           : 'text-slate-500 hover:text-brand-600 hover:bg-slate-50'
       }`
     }
   >
-    <Icon className="w-6 h-6 md:mr-3" />
-    <span className="text-xs md:text-base font-medium mt-1 md:mt-0">{label}</span>
+    <Icon className="w-5 h-5 mr-3" />
+    <span className="text-base">{label}</span>
   </NavLink>
 );
 
 export const Navigation: React.FC = () => {
   const { user, logout } = useAuth();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  return (
+  const toggleMobileMenu = () => setIsMobileOpen(!isMobileOpen);
+  const closeMobileMenu = () => setIsMobileOpen(false);
+
+  const SidebarContent = () => (
     <>
-      {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 left-0 pt-6 shadow-sm z-20">
-        <div className="px-6 mb-8 flex items-center">
-          <div className="w-8 h-8 bg-brand-600 rounded-md flex items-center justify-center text-white font-bold text-xl mr-2">
+        <div className="px-6 mb-8 flex items-center justify-between">
+          <div className="flex items-center">
+             <div className="w-8 h-8 bg-brand-600 rounded-md flex items-center justify-center text-white font-bold text-xl mr-2">
             A
+             </div>
+             <span className="text-2xl font-bold text-slate-800 tracking-tight">Atumwa</span>
           </div>
-          <span className="text-2xl font-bold text-slate-800 tracking-tight">Atumwa</span>
+          {/* Close button only visible on mobile inside drawer */}
+          <button onClick={closeMobileMenu} className="md:hidden text-slate-500 p-1 hover:bg-slate-100 rounded-full">
+            <X size={24} />
+          </button>
         </div>
         
-        <div className="flex flex-col space-y-2 px-2">
+        <div className="flex flex-col space-y-1" onClick={closeMobileMenu}>
           <NavItem to="/" icon={Home} label="Home" />
+          {user?.role === 'admin' && (
+             <NavItem to="/admin" icon={LayoutDashboard} label="Dashboard" />
+          )}
           <NavItem to="/gigs" icon={Briefcase} label={user?.role === 'client' ? "My Gigs" : "Gigs"} />
           <NavItem to="/map" icon={Map} label="Map" />
           <NavItem to="/messages" icon={MessageSquare} label="Messages" />
@@ -61,7 +72,7 @@ export const Navigation: React.FC = () => {
                   </div>
                 </div>
                 <button 
-                  onClick={logout}
+                  onClick={() => { logout(); closeMobileMenu(); }}
                   className="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 p-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   <LogOut size={16} /> Sign Out
@@ -69,16 +80,39 @@ export const Navigation: React.FC = () => {
              </div>
            )}
         </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <nav className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 h-screen sticky top-0 left-0 pt-6 shadow-sm z-30">
+        <SidebarContent />
       </nav>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 h-16 flex items-center justify-around z-50 pb-safe">
-        <NavItem to="/" icon={Home} label="Home" />
-        <NavItem to="/gigs" icon={Briefcase} label="Gigs" />
-        <NavItem to="/map" icon={Map} label="Map" />
-        <NavItem to="/messages" icon={MessageSquare} label="Chat" />
-        <NavItem to="/profile" icon={User} label="Me" />
-      </nav>
+      {/* Mobile Top Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-slate-200 h-16 flex items-center justify-between px-4 z-40 shadow-sm">
+         <div className="flex items-center">
+            <div className="w-8 h-8 bg-brand-600 rounded-md flex items-center justify-center text-white font-bold text-xl mr-2">A</div>
+            <span className="text-xl font-bold text-slate-800">Atumwa</span>
+         </div>
+         <button onClick={toggleMobileMenu} className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+            <Menu size={24} />
+         </button>
+      </div>
+
+      {/* Mobile Drawer Overlay */}
+      {isMobileOpen && (
+        <div 
+            className="fixed inset-0 bg-black/50 z-50 md:hidden animate-in fade-in duration-200 backdrop-blur-sm"
+            onClick={closeMobileMenu}
+        />
+      )}
+
+      {/* Mobile Drawer */}
+      <div className={`fixed inset-y-0 left-0 w-72 bg-white shadow-2xl z-50 pt-6 transform transition-transform duration-300 md:hidden flex flex-col ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+         <SidebarContent />
+      </div>
     </>
   );
 };

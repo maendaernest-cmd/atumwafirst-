@@ -12,6 +12,7 @@ export interface User {
 }
 
 export type GigType = 'prescription' | 'paperwork' | 'parcel' | 'shopping';
+export type PaymentMethod = 'ecocash' | 'cash_usd' | 'zig';
 
 export interface Gig {
   id: string;
@@ -19,6 +20,7 @@ export interface Gig {
   description: string;
   type: GigType;
   price: number;
+  paymentMethod: PaymentMethod;
   status: 'open' | 'in-progress' | 'completed' | 'expired';
   locationStart: string;
   locationEnd: string;

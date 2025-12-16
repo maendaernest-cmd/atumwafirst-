@@ -3,6 +3,7 @@ import { MOCK_CHATS } from '../constants';
 import { useAuth } from '../context/AuthContext';
 import { ChatThread, Message } from '../types';
 import { Search, MoreVertical, Send, Image as ImageIcon, Mic, MessageSquare } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const MOCK_INCOMING_MESSAGES = [
   "Are you close?",
@@ -18,6 +19,7 @@ const MOCK_INCOMING_MESSAGES = [
 
 export const Messages: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [chats, setChats] = useState<ChatThread[]>(MOCK_CHATS);
   const [activeChatId, setActiveChatId] = useState<string | null>(MOCK_CHATS[0].id);
   const [messageInput, setMessageInput] = useState('');
@@ -48,6 +50,37 @@ export const Messages: React.FC = () => {
       chatsRef.current = chats;
   }, [chats]);
 
+  // Handle incoming navigation state (e.g. "Chat" button from Gigs page)
+  useEffect(() => {
+    if (location.state?.recipientId) {
+        const { recipientId, recipientName } = location.state;
+        const existingChat = chats.find(c => c.participant.id === recipientId);
+        
+        if (existingChat) {
+            setActiveChatId(existingChat.id);
+        } else {
+            // Create new temporary chat thread
+            const newChat: ChatThread = {
+                id: `c_${Date.now()}`,
+                participant: {
+                    id: recipientId,
+                    name: recipientName || 'Messenger',
+                    role: 'atumwa',
+                    avatar: `https://ui-avatars.com/api/?name=${recipientName || 'Messenger'}&background=random`,
+                    rating: 5.0,
+                    location: 'Unknown',
+                    isVerified: true
+                },
+                lastMessage: '',
+                lastMessageTime: 'Now',
+                unreadCount: 0
+            };
+            setChats(prev => [newChat, ...prev]);
+            setActiveChatId(newChat.id);
+        }
+    }
+  }, [location.state]);
+
   // Scroll to bottom when messages change
   useEffect(() => {
       if (activeChatId) {
@@ -59,8 +92,8 @@ export const Messages: React.FC = () => {
   useEffect(() => {
     const timeouts: ReturnType<typeof setTimeout>[] = [];
     const interval = setInterval(() => {
-        // 50% chance to trigger an event cycle every 3.5 seconds
-        if (Math.random() > 0.5) {
+        // Simulation Logic: 60% chance to trigger an event cycle every 3 seconds
+        if (Math.random() > 0.4) {
             const currentChats = chatsRef.current;
             if (currentChats.length === 0) return;
 
@@ -73,8 +106,8 @@ export const Messages: React.FC = () => {
                 c.id === targetChat.id ? { ...c, isTyping: true } : c
             ));
 
-            // 2. Schedule Message Delivery (1.5s - 2.5s delay)
-            const delay = 1500 + Math.random() * 1000;
+            // 2. Schedule Message Delivery (1s - 2.5s delay)
+            const delay = 1000 + Math.random() * 1500;
             const timeoutId = setTimeout(() => {
                 const randomText = MOCK_INCOMING_MESSAGES[Math.floor(Math.random() * MOCK_INCOMING_MESSAGES.length)];
                 const now = new Date();
@@ -123,7 +156,7 @@ export const Messages: React.FC = () => {
             
             timeouts.push(timeoutId);
         }
-    }, 3500);
+    }, 3000);
 
     return () => {
         clearInterval(interval);
@@ -184,8 +217,11 @@ export const Messages: React.FC = () => {
 
   const currentMessages = activeChatId ? (chatMessages[activeChatId] || []) : [];
 
+  // Calculate container height dynamically
+  // Mobile: 100vh - header(64px) - padding-top(24px) - padding-bottom(24px) ~ 112px gap. Safe with 7rem.
+  // Desktop: 100vh - padding(48px) ~ 3rem.
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-8rem)] md:h-[calc(100vh-3rem)] flex">
+    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-7rem)] md:h-[calc(100vh-3rem)] flex">
       {/* Sidebar - Chat List */}
       <div className={`${activeChat ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-col border-r border-slate-200`}>
         <div className="p-4 border-b border-slate-100">
