@@ -245,19 +245,30 @@ export const AdminDashboard: React.FC = () => {
     addToast('Broadcast Deleted', 'Message removed from history.', 'success');
   };
 
-  const handleResolveDispute = (id: string, action: string) => {
+  const handleResolveDispute = (id: string, action: 'refund' | 'warn' | 'ban') => {
       setProcessingId(id);
       
+      // Simulate API Call
       setTimeout(() => {
           setDisputes(prev => prev.map(d => 
               d.id === id ? { ...d, status: 'resolved' } : d
           ));
 
-          addToast(
-              'Dispute Resolved',
-              `Dispute #${id} marked as resolved via: ${action}`,
-              'success'
-          );
+          let title = 'Dispute Resolved';
+          let message = `Dispute #${id} marked as resolved.`;
+          
+          if (action === 'refund') {
+              title = 'Refund Processed';
+              message = `Full refund issued to client for Dispute #${id}.`;
+          } else if (action === 'warn') {
+              title = 'Warning Sent';
+              message = `Official warning sent to user for Dispute #${id}.`;
+          } else if (action === 'ban') {
+              title = 'User Suspended';
+              message = `User account banned for Dispute #${id}.`;
+          }
+
+          addToast(title, message, 'success');
           setProcessingId(null);
       }, 1500);
   };
@@ -768,7 +779,7 @@ export const AdminDashboard: React.FC = () => {
                                         <div className="flex items-center justify-end gap-2">
                                             <button 
                                                 disabled={processingId === dispute.id}
-                                                onClick={() => handleResolveDispute(dispute.id, 'Refund Client')}
+                                                onClick={() => handleResolveDispute(dispute.id, 'refund')}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-green-700 hover:bg-green-50 rounded-md border border-slate-200 hover:border-green-200 transition-all disabled:opacity-50 min-w-[85px] justify-center"
                                                 title="Refund Client"
                                             >
@@ -777,7 +788,7 @@ export const AdminDashboard: React.FC = () => {
                                             </button>
                                             <button 
                                                 disabled={processingId === dispute.id}
-                                                onClick={() => handleResolveDispute(dispute.id, 'Warn User')}
+                                                onClick={() => handleResolveDispute(dispute.id, 'warn')}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-amber-700 hover:bg-amber-50 rounded-md border border-slate-200 hover:border-amber-200 transition-all disabled:opacity-50 min-w-[75px] justify-center"
                                                 title="Warn User"
                                             >
@@ -786,7 +797,7 @@ export const AdminDashboard: React.FC = () => {
                                             </button>
                                             <button 
                                                 disabled={processingId === dispute.id}
-                                                onClick={() => handleResolveDispute(dispute.id, 'Ban User')}
+                                                onClick={() => handleResolveDispute(dispute.id, 'ban')}
                                                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-red-700 hover:bg-red-50 rounded-md border border-slate-200 hover:border-red-200 transition-all disabled:opacity-50 min-w-[70px] justify-center"
                                                 title="Ban User"
                                             >
